@@ -81,7 +81,7 @@ class App extends React.Component {
 
         for(const visitsArray of visits) {
             filteredVisits.push(
-                visitsArray.filter(visit => visit.url.toLowerCase().includes(search.toLowerCase()) || visit.title.toLowerCase().includes(search.toLowerCase()))
+                visitsArray.filter(visit => visit.url.toLowerCase().includes(search.toLowerCase()) || (visit.title != null && visit.title.toLowerCase().includes(search.toLowerCase())))
             );
         }
 
