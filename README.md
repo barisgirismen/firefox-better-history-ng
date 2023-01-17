@@ -9,7 +9,7 @@ New features might or might not come, I never used React outside some experiment
 For now, there is no public AMO link. I’m planning to add some fixes and polishing in the next few days and then 
 publish the extension.
 
-There is currently a signed XPI under releases, in case anyone is anxious to get this extension back ;)
+There is currently a signed XPI under releases: [v1.0.1 NG](https://github.com/Christoph-Wagner/firefox-better-history-ng/releases/tag/v1.0.1-alpha1), in case anyone is anxious to get this extension back ;)
 
 ## Roadmap
 
