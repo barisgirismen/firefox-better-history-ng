@@ -17,7 +17,7 @@ const History = ({visits}) =>
 
             <span className="history-item-url history-item--full ellipsis-text">
                 <abbr title={ 'Last visit: ' + Moment(visit.lastVisitTime).format("MMMM Do YYYY, h:mm:ss a") }>
-                    { visit.title != "" ? visit.title : visit.url }
+                    { visit.title != null && visit.title != "" ? visit.title : visit.url }
                 </abbr>
             </span>
 

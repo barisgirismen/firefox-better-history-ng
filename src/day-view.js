@@ -20,7 +20,7 @@ const History = ({visits}) => (
                 </div>
 
                 <span className="history-item-url ellipsis-text">
-                    { visit.title != "" ? visit.title : visit.url }
+                    { visit.title != null && visit.title != "" ? visit.title : visit.url }
                 </span>
 
                 <div className="history-item-link">
