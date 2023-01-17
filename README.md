@@ -1,3 +1,18 @@
+# Better History NG
+
+A fork to possibly revive this great project. 
+
+The only change was fixing the broken search, but I plan to at least fix other bugs appearing.
+
+New features might or might not come, I never used React outside some experimenting, so I’m not sure how well I’ll do.
+
+For now, there is no public AMO link, as the original repo is missing a license. I contacted the author in hopes 
+that they’ll add an OSS license so this can become a legal fork ;)
+
+### Original README follows
+
+-----
+
 # ⚠️ DEPRECATED
 
  This extension is now deprecated. I have not been using this extension for years and I don't have time to maintain this project anymore.
