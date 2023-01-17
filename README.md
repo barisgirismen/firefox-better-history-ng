@@ -1,13 +1,15 @@
 # Better History NG
 
-A fork to possibly revive this great project. 
+A fork of the archived original better history extension.
 
 The only visible changes so far were fixing the broken search and re-enabling icons.
 
 New features might or might not come, I never used React outside some experimenting, so I’m not sure how well I’ll do.
 
-For now, there is no public AMO link, as the original repo is missing a license. I contacted the author in hopes 
-that they’ll add an OSS license so this can become a legal fork. They replied that they will do so.
+For now, there is no public AMO link. I’m planning to add some fixes and polishing in the next few days and then 
+publish the extension.
+
+There is currently a signed XPI under releases, in case anyone is anxious to get this extension back ;)
 
 ## Roadmap
 
@@ -20,16 +22,7 @@ that they’ll add an OSS license so this can become a legal fork. They replied 
 * Add settings for date formats
 
 
-
-### Original README follows
-
------
-
-# ⚠️ DEPRECATED
-
- This extension is now deprecated. I have not been using this extension for years and I don't have time to maintain this project anymore.
- 
- I hope that someone will eventually fork and maintain a new repo.
+### Original description
 
 # Better history
 
