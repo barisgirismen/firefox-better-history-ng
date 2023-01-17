@@ -1,11 +1,12 @@
 {
-    "name": "firefox-better-history",
-    "version": "1.1.2",
-    "description": "",
+    "name": "firefox-better-history-ng",
+    "version": "1.0.0",
+    "description": "Forked from https://github.com/Vincent-P/firefox-better-history",
     "scripts": {
         "build": "webpack --progress",
         "watch": "webpack --progress --watch",
-        "ext-reload": "web-ext run -s extension",
+        "ext-reload": "web-ext run -s extension --firefox-profile=ExtensionTest",
+        "ext-build": "web-ext build -s extension",
         "ext-reload-dev": "web-ext run -s extension --firefox=firefoxdeveloperedition"
     },
     "dependencies": {

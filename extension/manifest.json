@@ -1,9 +1,9 @@
 {
     "description": "A Better History page inspired by Vivaldi",
     "manifest_version": 2,
-    "name": "better-history",
-    "version": "1.1.1",
-    "homepage_url": "https://github.com/Vincent-P/firefox-better-history",
+    "name": "better-history-ng",
+    "version": "1.0.0",
+    "homepage_url": "https://github.com/Christoph-Wagner/firefox-better-history-ng",
     "background": {
         "scripts": ["dist/background.js"]
     },
@@ -17,7 +17,7 @@
 
     "browser_action": {
         "default_icon": "history.svg",
-        "default_title": "Better History"
+        "default_title": "Better History NG"
     },
 
     "commands": {
