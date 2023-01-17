@@ -2,12 +2,24 @@
 
 A fork to possibly revive this great project. 
 
-The only change was fixing the broken search, but I plan to at least fix other bugs appearing.
+The only visible changes so far were fixing the broken search and re-enabling icons.
 
 New features might or might not come, I never used React outside some experimenting, so I’m not sure how well I’ll do.
 
 For now, there is no public AMO link, as the original repo is missing a license. I contacted the author in hopes 
-that they’ll add an OSS license so this can become a legal fork ;)
+that they’ll add an OSS license so this can become a legal fork. They replied that they will do so.
+
+## Roadmap
+
+* Use Internationalization API for dates and time and start of week
+* Fix style regression from de-duplicating some code
+
+### Maybe
+
+* Allow search over longer periods than just months
+* Add settings for date formats
+
+
 
 ### Original README follows
 
