@@ -5,7 +5,7 @@ const NoHistory = () => <div className="history-item">Empty</div>;
 
 const DayView = ({ visits }) => (
   <div className="history-day-container">
-    {!visits || !visits.length || !visits[0].length ? <NoHistory /> : <History visits={visits[0]} />}
+    {!visits || !visits.length || !visits[0].length ? <NoHistory /> : <History visits={visits[0]} day={true} />}
   </div>
 );
 

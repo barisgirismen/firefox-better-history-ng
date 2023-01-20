@@ -419,15 +419,14 @@ img {
   height: 16px;
 }
 
-.history-item-date {
-  display: none;
+.history-item-url {
+  flex-grow: 2;
 }
 
 .history-day-container {
-  .history-item-date {
-    display: inline;
+  .history-item-url {
+    flex-grow: 0;
   }
-
   abbr {
     text-decoration: none;
   }
