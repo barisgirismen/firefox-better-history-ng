@@ -32,7 +32,11 @@ export default class HistoryApi {
             Moment(visit.visitTime).isBefore(todayEnd)
           ) {
             // create new HistoryItem's with different lastVisitTime
-            var newHistoryItem = { title: historyItem.title, url: historyItem.url, lastVisitTime: visit.visitTime };
+            var newHistoryItem = {
+              title: historyItem.title,
+              url: historyItem.url,
+              lastVisitTime: visit.visitTime,
+            };
             allHistoryItems.push(newHistoryItem);
           }
         }
@@ -82,7 +86,11 @@ export default class HistoryApi {
             Moment(visit.visitTime).isBefore(dateEnd)
           ) {
             // create new HistoryItem's with different lastVisitTime
-            var newHistoryItem = { title: historyItem.title, url: historyItem.url, lastVisitTime: visit.visitTime };
+            var newHistoryItem = {
+              title: historyItem.title,
+              url: historyItem.url,
+              lastVisitTime: visit.visitTime,
+            };
             daysArray[Moment(newHistoryItem.lastVisitTime).weekday()].push(newHistoryItem);
           }
         }
@@ -113,10 +121,10 @@ export default class HistoryApi {
       endTime: dateEnd.toDate(),
       maxResults: Number.MAX_SAFE_INTEGER,
     });
-
-    const daysArray = [];
+    const daysMap = new Map();
     for (let i = 0; i < 35; i++) {
-      daysArray.push([]);
+      let day = dateStart.clone().add(i, 'days');
+      daysMap.set(day.format('YYYYMMDD'), []);
     }
 
     if (repeatedVisits) {
@@ -124,28 +132,25 @@ export default class HistoryApi {
         let visits = await browser.history.getVisits({ url: historyItem.url });
         // add all separate visits
         for (const visit of visits) {
-          if (
-            visit.visitTime !== undefined &&
-            Moment(visit.visitTime).isAfter(dateStart) &&
-            Moment(visit.visitTime).isBefore(dateEnd)
-          ) {
+          console.log(Moment(visit.visitTime).format('YYYYMMDD'));
+          if (visit.visitTime !== undefined && daysMap.has(Moment(visit.visitTime).format('YYYYMMDD'))) {
             // create new HistoryItem's with different lastVisitTime
-            var newHistoryItem = { title: historyItem.title, url: historyItem.url, lastVisitTime: visit.visitTime };
-            const idx = Moment(newHistoryItem.lastVisitTime).dayOfYear() - dateStart.dayOfYear();
-            if (idx < 0 || idx >= 35) continue;
-            daysArray[idx].push(newHistoryItem);
+            var newHistoryItem = {
+              title: historyItem.title,
+              url: historyItem.url,
+              lastVisitTime: visit.visitTime,
+            };
+            daysMap.get(Moment(newHistoryItem.lastVisitTime).format('YYYYMMDD')).push(newHistoryItem);
           }
         }
       }
     } else {
       for (const historyItem of historyItems) {
-        const idx = Moment(historyItem.lastVisitTime).dayOfYear() - dateStart.dayOfYear();
-        if (idx < 0 || idx >= 35) continue;
-        daysArray[idx].push(historyItem);
+        daysMap.get(Moment(historyItem.lastVisitTime).format('YYYYMMDD')).push(historyItem);
       }
     }
 
-    return daysArray.map((day) => day.sort((a, b) => b.lastVisitTime - a.lastVisitTime));
+    return [...daysMap.values()].map((day) => day.sort((a, b) => b.lastVisitTime - a.lastVisitTime));
   }
 
   static formatDayHeader(date) {
