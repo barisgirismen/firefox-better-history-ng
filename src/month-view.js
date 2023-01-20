@@ -32,7 +32,6 @@ const MonthView = ({ visits, date, viewDay }) => {
   const firstDayOfMonth = date.clone().startOf('month');
   const firstDayOfWeekBeforeMonth = firstDayOfMonth.startOf('week');
   // dont use firstDayOfMonth anymore
-
   let days = [];
   for (let i = 0; i < 35; i++) {
     const day = firstDayOfWeekBeforeMonth.clone().add(i, 'days');

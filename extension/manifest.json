@@ -7,6 +7,15 @@
     "background": {
         "scripts": ["dist/background.js"]
     },
+    "options_ui": {
+        "page": "options.html",
+        "browser_style": true
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "{058af685-fc17-47a4-991a-bab91a89533d}"
+        }
+    },
 
     "icons": {
         "16": "history.svg",

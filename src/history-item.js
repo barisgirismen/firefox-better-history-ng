@@ -2,14 +2,21 @@ import Moment from 'moment/moment';
 import Icon from './icon';
 import React from 'react';
 
-const getLastVisit = (visit) => 'Last visit: ' + new Date(visit.lastVisitTime).toLocaleString();
+const getLastVisit = (visit) =>
+  'Last visit: ' + new Date(visit.lastVisitTime).toLocaleString(window.ihatereactngbetterhistoyregion);
 const getTitle = (visit) => (visit.title != null && visit.title != '' ? visit.title : visit.url);
 
 export const History = ({ visits, day = false }) => (
   <div>
     {visits.map((visit) => (
       <div className="history-item">
-        {day ? <span className="history-item-date">{new Date(visit.lastVisitTime).toLocaleTimeString()}</span> : ''}
+        {day ? (
+          <span className="history-item-date">
+            {new Date(visit.lastVisitTime).toLocaleTimeString(window.ihatereactngbetterhistoyregion)}
+          </span>
+        ) : (
+          ''
+        )}
 
         <div className="history-item-icon">
           <Icon className="img-icon" default="globe" faviconUrl={visit.url} />
