@@ -4,159 +4,82 @@ function capitalize(word: string) {
   return word.charAt(0).toLocaleUpperCase() + word.slice(1);
 }
 
-export default class HistoryApi {
-  /**
-   * Return a Promise containing the visits of a day, most recent first
-   */
-  static async getDayVisits(today: Date, repeatedVisits: boolean) {
-    const todayStart = Moment(today).startOf('day').toDate();
-    const todayEnd = Moment(today).endOf('day').toDate();
+async function search(start: Date, end: Date) {
+  return await browser.history.search({
+    text: '',
+    startTime: start,
+    endTime: end,
+    maxResults: Number.MAX_SAFE_INTEGER,
+  });
+}
+function getMap(start: Date, count: number) {
+  const daysMap = new Map<string, browser.history.HistoryItem[]>();
+  for (let i = 0; i < count; i++) {
+    let day = Moment(start).clone().add(i, 'days');
+    daysMap.set(day.format('YYYYMMDD'), []);
+  }
+  return daysMap;
+}
+function convertMap(map: Map<string, browser.history.HistoryItem[]>) {
+  return [...map.values()].map((day) => day.sort((a, b) => (b.lastVisitTime || 0) - (a.lastVisitTime || 0)));
+}
 
-    let historyItems = await browser.history.search({
-      text: '',
-      startTime: todayStart,
-      endTime: todayEnd,
-      maxResults: Number.MAX_SAFE_INTEGER,
-    });
-
-    const allHistoryItems: browser.history.HistoryItem[] = []; // multi-visits separated
-    for (const historyItem of historyItems) {
-      if (!historyItem.url) continue;
-      let visits = await browser.history.getVisits({ url: historyItem.url });
-
-      if (repeatedVisits) {
-        // add all separately visits
-        for (const visit of visits) {
-          if (
-            visit.visitTime !== undefined &&
-            Moment(visit.visitTime).isAfter(todayStart) &&
-            Moment(visit.visitTime).isBefore(todayEnd)
-          ) {
-            // create new HistoryItem's with different lastVisitTime
-            var newHistoryItem = {
-              title: historyItem.title,
-              url: historyItem.url,
-              lastVisitTime: visit.visitTime,
-              id: visit.id,
-            };
-            allHistoryItems.push(newHistoryItem);
-          }
-        }
-      } else {
-        // add only last visit
-        // Look for the latest visit item of this day
-        const todayFirstVisit = visits
-          .reverse()
-          .find((visitItem) => Moment(visitItem.visitTime).isSame(Moment(today), 'day'));
-
-        // Sometimes there aren't any visits (during first load usually)
-        if (todayFirstVisit) {
-          historyItem.lastVisitTime = todayFirstVisit.visitTime;
-        }
+function addEntries(daysMap: Map<string, browser.history.HistoryItem[]>, historyItems: browser.history.HistoryItem[]) {
+  for (const historyItem of historyItems) {
+    daysMap.get(Moment(historyItem.lastVisitTime).format('YYYYMMDD'))!.push(historyItem);
+  }
+}
+async function addEachVisitToDayMap(
+  daysMap: Map<string, browser.history.HistoryItem[]>,
+  historyItems: browser.history.HistoryItem[]
+) {
+  for (const historyItem of historyItems) {
+    if (!historyItem.url) continue;
+    let visits = await browser.history.getVisits({ url: historyItem.url });
+    for (const visit of visits) {
+      const dayKey = Moment(visit.visitTime).format('YYYYMMDD');
+      if (visit.visitTime !== undefined && daysMap.has(dayKey)) {
+        // create new HistoryItem's with different lastVisitTime
+        const newHistoryItem = {
+          title: historyItem.title,
+          url: historyItem.url,
+          lastVisitTime: visit.visitTime,
+          id: visit.id,
+        };
+        daysMap.get(dayKey)!.push(newHistoryItem);
       }
     }
-    if (repeatedVisits) {
-      return [allHistoryItems.sort((a, b) => (b.lastVisitTime || 0) - (a.lastVisitTime || 0))];
-    } else {
-      return [historyItems.sort((a, b) => (b.lastVisitTime || 0) - (a.lastVisitTime || 0))];
-    }
+  }
+}
+
+async function getItems(start: Date, end: Date, daysToMap: number, repeatedVisits: boolean) {
+  let historyItems = await search(start, end);
+  const daysMap = getMap(start, daysToMap);
+  if (repeatedVisits) {
+    await addEachVisitToDayMap(daysMap, historyItems);
+  } else {
+    addEntries(daysMap, historyItems);
+  }
+  return convertMap(daysMap);
+}
+export default class HistoryApi {
+  static async getDayVisits(today: Date, repeatedVisits: boolean) {
+    const dateStart = Moment(today).startOf('day').toDate();
+    const dateEnd = Moment(today).endOf('day').toDate();
+    return await getItems(dateStart, dateEnd, 1, repeatedVisits);
   }
 
-  /**
-   */
   static async getWeekVisits(today: Moment.Moment, repeatedVisits: boolean) {
     const dateStart = today.clone().startOf('week').toDate();
     const dateEnd = today.clone().endOf('week').toDate();
-
-    let historyItems = await browser.history.search({
-      text: '',
-      startTime: dateStart,
-      endTime: dateEnd,
-      maxResults: Number.MAX_SAFE_INTEGER,
-    });
-
-    const daysArray = [[], [], [], [], [], [], []] as browser.history.HistoryItem[][];
-
-    if (repeatedVisits) {
-      for (const historyItem of historyItems) {
-        if (!historyItem.url) continue;
-        let visits = await browser.history.getVisits({ url: historyItem.url });
-        // add all separate visits
-        for (const visit of visits) {
-          if (
-            visit.visitTime !== undefined &&
-            Moment(visit.visitTime).isAfter(dateStart) &&
-            Moment(visit.visitTime).isBefore(dateEnd)
-          ) {
-            // create new HistoryItem's with different lastVisitTime
-            const newHistoryItem = {
-              title: historyItem.title,
-              url: historyItem.url,
-              lastVisitTime: visit.visitTime,
-              id: visit.id,
-            };
-            daysArray[Moment(newHistoryItem.lastVisitTime).weekday()].push(newHistoryItem);
-          }
-        }
-      }
-    } else {
-      for (const historyItem of historyItems) {
-        daysArray[Moment(historyItem.lastVisitTime).weekday()].push(historyItem);
-      }
-    }
-
-    return daysArray.map((day) => day.sort((a, b) => (b.lastVisitTime || 0) - (a.lastVisitTime || 0)));
+    return await getItems(dateStart, dateEnd, 7, repeatedVisits);
   }
 
-  /**
-   * @param {Date} today a date used to check the month and year of each visits
-   */
   static async getMonthVisits(today: Moment.Moment, repeatedVisits: boolean) {
     const firstDayOfMonth = today.clone().startOf('month');
-    const firstDayOfWeekBeforeMonth = firstDayOfMonth.startOf('week');
-    // dont use firstDayOfMonth anymore
-
-    const dateStart = firstDayOfWeekBeforeMonth;
-    const dateEnd = dateStart.clone().add(34, 'days');
-
-    let historyItems = await browser.history.search({
-      text: '',
-      startTime: dateStart.toDate(),
-      endTime: dateEnd.toDate(),
-      maxResults: Number.MAX_SAFE_INTEGER,
-    });
-    const daysMap = new Map<string, browser.history.HistoryItem[]>();
-    for (let i = 0; i < 35; i++) {
-      let day = dateStart.clone().add(i, 'days');
-      daysMap.set(day.format('YYYYMMDD'), []);
-    }
-
-    if (repeatedVisits) {
-      for (const historyItem of historyItems) {
-        if (!historyItem.url) continue;
-        let visits = await browser.history.getVisits({ url: historyItem.url });
-        // add all separate visits
-        for (const visit of visits) {
-          const dayKey = Moment(visit.visitTime).format('YYYYMMDD');
-          if (visit.visitTime !== undefined && daysMap.has(dayKey)) {
-            // create new HistoryItem's with different lastVisitTime
-            const newHistoryItem = {
-              title: historyItem.title,
-              url: historyItem.url,
-              lastVisitTime: visit.visitTime,
-              id: visit.id,
-            };
-            daysMap.get(dayKey)!.push(newHistoryItem);
-          }
-        }
-      }
-    } else {
-      for (const historyItem of historyItems) {
-        daysMap.get(Moment(historyItem.lastVisitTime).format('YYYYMMDD'))!.push(historyItem);
-      }
-    }
-
-    return [...daysMap.values()].map((day) => day.sort((a, b) => (b.lastVisitTime || 0) - (a.lastVisitTime || 0)));
+    const dateStart = firstDayOfMonth.startOf('week');
+    const dateEnd = dateStart.clone().add(34, 'days').toDate();
+    return await getItems(dateStart.toDate(), dateEnd, 35, repeatedVisits);
   }
 
   static formatDayHeader(date: Moment.Moment) {
