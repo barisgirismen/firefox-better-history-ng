@@ -1,10 +1,9 @@
-import Moment from 'moment/moment';
 import Icon from './icon';
 import React from 'react';
 
 const getLastVisit = (visit) =>
   'Last visit: ' + new Date(visit.lastVisitTime).toLocaleString(window.ihatereactngbetterhistoyregion);
-const getTitle = (visit) => (visit.title != null && visit.title != '' ? visit.title : visit.url);
+const getTitle = (visit) => (visit.title != null && visit.title !== '' ? visit.title : visit.url);
 
 export const History = ({ visits, day = false }) => (
   <div>
@@ -26,7 +25,7 @@ export const History = ({ visits, day = false }) => (
           <abbr title={getLastVisit(visit) + '; ' + getTitle(visit)}>{getTitle(visit)}</abbr>
         </span>
         <div className="history-item-link">
-          <a href={visit.url} target="_blank" rel="noopener noreferrer">
+          <a href={visit.url} title={visit.url} target="_blank" rel="noopener noreferrer">
             {day ? 'Link' : ''}
           </a>
         </div>
