@@ -73,15 +73,36 @@ class App extends React.Component {
       return visits;
     }
 
+    let hostname_filter;
+    let content_filter;
+
+    let xs = search.split(' ');
+    if (xs[xs.length - 1].startsWith('site:')) {
+      hostname_filter = xs[xs.length - 1].substr(5);
+      xs.pop();
+      content_filter = xs.join(' ').trim().toLowerCase();
+    } else {
+      content_filter = search.trim().toLowerCase();
+    }
+
     const filteredVisits = [];
 
     for (const visitsArray of visits) {
       filteredVisits.push(
-        visitsArray.filter(
-          (visit) =>
-            visit.url.toLowerCase().includes(search.toLowerCase()) ||
-            (visit.title != null && visit.title.toLowerCase().includes(search.toLowerCase()))
-        )
+        visitsArray.filter((visit) => {
+          const b =
+            visit.url.toLowerCase().includes(content_filter) ||
+            (visit.title != null && visit.title.toLowerCase().includes(content_filter));
+
+          if (!b) {
+            return false;
+          }
+          if (hostname_filter == undefined) {
+            return true;
+          }
+          const url = new URL(visit.url);
+          return url.hostname.endsWith(hostname_filter);
+        })
       );
     }
 
