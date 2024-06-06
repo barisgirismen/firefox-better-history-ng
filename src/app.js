@@ -20,12 +20,12 @@ class App extends React.Component {
     super(props);
 
     let currentView = props.defaultView;
-    if (currentView == null || currentView == undefined) {
+    if (currentView === null || currentView === undefined) {
       currentView = VIEWS.WEEK;
     }
 
     let repeatedVisits = props.repeatedVisits;
-    if (repeatedVisits == null || repeatedVisits == undefined) {
+    if (repeatedVisits === null || repeatedVisits === undefined) {
       repeatedVisits = false;
     }
 
@@ -116,9 +116,9 @@ class App extends React.Component {
     }
 
     let selectedDate =
-      currentView == VIEWS.DAY
+      currentView === VIEWS.DAY
         ? HistoryApi.formatDayHeader(date)
-        : currentView == VIEWS.WEEK
+        : currentView === VIEWS.WEEK
         ? HistoryApi.formatWeekHeader(date)
         : HistoryApi.formatMonthHeader(date);
 
