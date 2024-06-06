@@ -6,7 +6,7 @@ The only visible changes so far were fixing the broken search and re-enabling ic
 
 New features might or might not come, I never used React outside some experimenting, so I’m not sure how well I’ll do.
 
-AMO Link coming soon™️
+[Better History NG on addons.mozilla.org](https://addons.mozilla.org/en-US/firefox/addon/better-history-ng/) with automatic updates. 1.0.3 is exactly the same as 1.0.2, only the version needed to change to enable making it public.
 
 ## Roadmap
 
