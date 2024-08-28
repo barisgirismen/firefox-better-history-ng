@@ -7,6 +7,7 @@
         "watch": "webpack --progress --watch",
         "ext-reload": "web-ext run -s extension --firefox-profile=ExtensionTest",
         "ext-build": "web-ext build -s extension",
+        "ext-build-overwrite": "web-ext build --overwrite-dest -s extension",
         "ext-reload-mainprofile": "web-ext run -s extension"
     },
     "dependencies": {
