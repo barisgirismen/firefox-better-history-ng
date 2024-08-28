@@ -105,12 +105,6 @@ $midscreen-max-width: 1400px;
     --caption-10-size: 11px;
     --title-10-size: 13px;
 
-
-    @media screen and (max-width: $midscreen-max-width)  {
-        --caption-10-size: 9px;
-        --title-10-size: 11px;
-    }
-
     --caption-20-size: calc(var(--body-scaling) * var(--caption-10-size));
     --caption-30-size: calc(var(--body-scaling) * var(--caption-20-size));
     --body-10-size: var(--caption-20-size);
@@ -154,7 +148,10 @@ $midscreen-max-width: 1400px;
     --link-hover-color: var(--blue-60);
     --link-active-color: var(--blue-70);
     --link-external-icon: url(open-in-new.svg);
-
+    @media screen and (max-width: $midscreen-max-width)  {
+        --caption-10-size: 9px;
+        --title-10-size: 11px;
+    }
     @media (prefers-color-scheme: dark) {
         --background-color: var(--grey-80);
         --primary-text-color: var(--grey-10);
