@@ -73,16 +73,30 @@ class App extends React.Component {
       return visits;
     }
 
-    let hostname_filter;
-    let content_filter;
+    let hostname_filters = [];
 
-    let xs = search.split(' ');
-    if (xs[xs.length - 1].startsWith('site:')) {
-      hostname_filter = xs[xs.length - 1].substr(5);
-      xs.pop();
-      content_filter = xs.join(' ').trim().toLowerCase();
-    } else {
-      content_filter = search.trim().toLowerCase();
+    // split search by spaces, but allow quotes to escape that feature,
+    // or to escape from the escape by escaping the quotes
+    let terms = search.match(/\\?.|^$/g).reduce((acc, currentChar) => {
+      // if the current character is a double quote, toggle the quote flag
+      if (currentChar === '"') {
+        acc.isInsideQuotes ^= 1;
+      } else if (!acc.isInsideQuotes && currentChar === ' ') {
+        // if not inside quotes and the current character is a space, add a new empty string to the array
+        acc.words.push('');
+      } else {
+        // otherwise, append the current character to the last string in the array,
+        // replacing escaped characters with their unescaped versions
+        acc.words[acc.words.length - 1] += currentChar.replace(/\\(.)/, '$1');
+      }
+      return acc;
+    }, { words: [''], isInsideQuotes: 0 }).words;
+    // if any of the terms start with site: take those as host filters for the search
+    // and remove them from the terms array
+    const siteFilterTerms = terms.filter(t => t.startsWith('site:'));
+    for (const siteFilterTerm of siteFilterTerms) {
+      hostname_filters.push(siteFilterTerm.substring(5));
+      terms = terms.filter(t => t !== siteFilterTerm);
     }
 
     const filteredVisits = [];
@@ -90,20 +104,28 @@ class App extends React.Component {
     for (const visitsArray of visits) {
       filteredVisits.push(
         visitsArray.filter((visit) => {
-          const b =
-            visit.url.toLowerCase().includes(content_filter) ||
-            (visit.title != null && visit.title.toLowerCase().includes(content_filter));
-
-          if (!b) {
+          // check if the title or url contains all the search terms
+            for (const search_item of terms) {
+              const needle = search_item.toUpperCase();
+              const success = visit.url.toUpperCase().includes(needle) ||
+                (visit.title != null && visit.title.toUpperCase().includes(needle));
+              if (!success) {
+                return false;
+              }
+            }
+            // success if no hostname filters set
+            if (hostname_filters.length === 0) {
+              return true;
+            }
+            // otherwise require a suffix match of the host name
+            const url = new URL(visit.url);
+            for (const hostname of hostname_filters) {
+              if (url.hostname.toUpperCase().endsWith(hostname.toUpperCase()))
+                return true;
+            }
             return false;
-          }
-          if (hostname_filter == undefined) {
-            return true;
-          }
-          const url = new URL(visit.url);
-          return url.hostname.endsWith(hostname_filter);
-        })
-      );
+          },
+        ));
     }
 
     return filteredVisits;
@@ -140,8 +162,8 @@ class App extends React.Component {
       currentView == VIEWS.DAY
         ? HistoryApi.formatDayHeader(date)
         : currentView == VIEWS.WEEK
-        ? HistoryApi.formatWeekHeader(date)
-        : HistoryApi.formatMonthHeader(date);
+          ? HistoryApi.formatWeekHeader(date)
+          : HistoryApi.formatMonthHeader(date);
 
     let clearButtonClasses = 'search-button search-button--cancel';
     if (!search) {
@@ -149,57 +171,57 @@ class App extends React.Component {
     }
 
     return (
-      <div className="container">
-        <div className="toolbar">
+      <div className='container'>
+        <div className='toolbar'>
           <h1>{selectedDate}</h1>
 
-          <div className="search-wrapper">
+          <div className='search-wrapper'>
             <input
-              className="default-input search-input"
-              type="text"
+              className='default-input search-input'
+              type='text'
               value={search}
               onChange={this.onInputChange.bind(this)}
-              placeholder="Search a website"
+              placeholder='Search a website'
             />
-            <button className={clearButtonClasses} onClick={() => this.setState({ search: '' })} title="Clear" />
+            <button className={clearButtonClasses} onClick={() => this.setState({ search: '' })} title='Clear' />
           </div>
 
-          <button className="toolbar-item-right ghost-button align-right" onClick={() => this.previous()}>
-            <Icon default="back" />
+          <button className='toolbar-item-right ghost-button align-right' onClick={() => this.previous()}>
+            <Icon default='back' />
           </button>
-          <button className="toolbar-item-right ghost-button" onClick={() => this.next()}>
-            <Icon default="forward" />
+          <button className='toolbar-item-right ghost-button' onClick={() => this.next()}>
+            <Icon default='forward' />
           </button>
           {repeatedVisits ? (
             <button
-              className="toolbar-item-right ghost-button"
-              title="Hide Repeated Visits"
+              className='toolbar-item-right ghost-button'
+              title='Hide Repeated Visits'
               onClick={() => this.toggleRepeatedVisits()}
             >
-              <Icon default="multiple" />
+              <Icon default='multiple' />
             </button>
           ) : (
             <button
-              className="toolbar-item-right ghost-button"
-              title="Show Repeated Visits"
+              className='toolbar-item-right ghost-button'
+              title='Show Repeated Visits'
               onClick={() => this.toggleRepeatedVisits()}
             >
-              <Icon default="multiple-disabled" />
+              <Icon default='multiple-disabled' />
             </button>
           )}
-          <button className="toolbar-item-right default-button" onClick={() => this.setView(VIEWS.DAY)}>
+          <button className='toolbar-item-right default-button' onClick={() => this.setView(VIEWS.DAY)}>
             Day
           </button>
-          <button className="toolbar-item-right default-button" onClick={() => this.setView(VIEWS.WEEK)}>
+          <button className='toolbar-item-right default-button' onClick={() => this.setView(VIEWS.WEEK)}>
             Week
           </button>
-          <button className="toolbar-item-right default-button" onClick={() => this.setView(VIEWS.MONTH)}>
+          <button className='toolbar-item-right default-button' onClick={() => this.setView(VIEWS.MONTH)}>
             Month
           </button>
         </div>
 
         {loading ? (
-          <div className="spinner"></div>
+          <div className='spinner'></div>
         ) : currentView == VIEWS.DAY ? (
           <DayView visits={filteredVisits} />
         ) : currentView == VIEWS.WEEK ? (
