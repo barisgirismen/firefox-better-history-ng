@@ -24,30 +24,57 @@ function convertMap(map: Map<string, browser.history.HistoryItem[]>) {
   return [...map.values()].map((day) => day.sort((a, b) => (b.lastVisitTime || 0) - (a.lastVisitTime || 0)));
 }
 
-function addEntries(daysMap: Map<string, browser.history.HistoryItem[]>, historyItems: browser.history.HistoryItem[]) {
-  for (const historyItem of historyItems) {
-    daysMap.get(Moment(historyItem.lastVisitTime).format('YYYYMMDD'))!.push(historyItem);
-  }
-}
-async function addEachVisitToDayMap(
+async function addEntries(
   daysMap: Map<string, browser.history.HistoryItem[]>,
-  historyItems: browser.history.HistoryItem[]
+  historyItems: browser.history.HistoryItem[],
+  repeatedVisits: boolean
 ) {
   for (const historyItem of historyItems) {
     if (!historyItem.url) continue;
-    let visits = await browser.history.getVisits({ url: historyItem.url });
-    for (const visit of visits) {
-      const dayKey = Moment(visit.visitTime).format('YYYYMMDD');
-      if (visit.visitTime !== undefined && daysMap.has(dayKey)) {
-        // create new HistoryItem's with different lastVisitTime
-        const newHistoryItem = {
-          title: historyItem.title,
-          url: historyItem.url,
-          lastVisitTime: visit.visitTime,
-          id: visit.id,
-        };
-        daysMap.get(dayKey)!.push(newHistoryItem);
-      }
+
+    const visits = await browser.history.getVisits({ url: historyItem.url });
+
+    if (repeatedVisits) {
+      addRepeatedVisits(daysMap, historyItem, visits);
+    } else {
+      addLatestVisits(daysMap, historyItem, visits);
+    }
+  }
+}
+
+function addLatestVisits(
+  daysMap: Map<string, browser.history.HistoryItem[]>,
+  historyItem: browser.history.HistoryItem,
+  visits: browser.history.VisitItem[]
+) {
+  for (const day of daysMap.keys()) {
+    const dayMoment = Moment(day);
+    const lastVisitOfTheDay = visits.find((visitItem) => Moment(visitItem.visitTime).isSame(dayMoment, 'day'));
+
+    // Sometimes there aren't any visits (during first load usually)
+    if (lastVisitOfTheDay) {
+      daysMap
+        .get(Moment(lastVisitOfTheDay.visitTime).format('YYYYMMDD'))!
+        .push({ ...historyItem, lastVisitTime: lastVisitOfTheDay.visitTime, id: lastVisitOfTheDay.id });
+    }
+  }
+}
+
+function addRepeatedVisits(
+  daysMap: Map<string, browser.history.HistoryItem[]>,
+  historyItem: browser.history.HistoryItem,
+  visits: browser.history.VisitItem[]
+) {
+  for (const visit of visits) {
+    const dayKey = Moment(visit.visitTime).format('YYYYMMDD');
+    if (visit.visitTime !== undefined && daysMap.has(dayKey)) {
+      // create new HistoryItem's with different lastVisitTime
+      const newHistoryItem = {
+        ...historyItem,
+        lastVisitTime: visit.visitTime,
+        id: visit.id,
+      };
+      daysMap.get(dayKey)!.push(newHistoryItem);
     }
   }
 }
@@ -55,11 +82,7 @@ async function addEachVisitToDayMap(
 async function getItems(start: Date, end: Date, daysToMap: number, repeatedVisits: boolean) {
   let historyItems = await search(start, end);
   const daysMap = getMap(start, daysToMap);
-  if (repeatedVisits) {
-    await addEachVisitToDayMap(daysMap, historyItems);
-  } else {
-    addEntries(daysMap, historyItems);
-  }
+  await addEntries(daysMap, historyItems, repeatedVisits);
   return convertMap(daysMap);
 }
 export default class HistoryApi {
