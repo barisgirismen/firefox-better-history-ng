@@ -46,16 +46,17 @@ a {
 
 
   // display icon for external links
-  &:not([class])[href*="//"]::after {
+  &:not([class])[href*="//"]::after, &.openNewTab::after {
+    $icon-size: 13px;
     background-image: var(--link-external-icon);
     background-repeat: no-repeat;
-    background-size: 16px 16px;
+    background-size: $icon-size $icon-size;
+    height: $icon-size;
+    width: $icon-size;
     content: "";
     display: inline-block;
-    height: 16px;
-    margin: -.3rem .15rem 0 .25rem;
+    margin: -.15rem .15rem 0 .25rem;
     vertical-align: middle;
-    width: 16px;
   }
 
 }
