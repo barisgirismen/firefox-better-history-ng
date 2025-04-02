@@ -69,63 +69,53 @@ class App extends React.Component {
   getFilteredVisits() {
     const { search, visits } = this.state;
 
-    if (!search) {
+    if (!search || search.trim() === '') {
       return visits;
     }
 
     let hostname_filters = [];
-
-    // split search by spaces, but allow quotes to escape that feature,
-    // or to escape from the escape by escaping the quotes
-    let terms = search.match(/\\?.|^$/g).reduce((acc, currentChar) => {
-      // if the current character is a double quote, toggle the quote flag
-      if (currentChar === '"') {
-        acc.isInsideQuotes ^= 1;
-      } else if (!acc.isInsideQuotes && currentChar === ' ') {
-        // if not inside quotes and the current character is a space, add a new empty string to the array
-        acc.words.push('');
-      } else {
-        // otherwise, append the current character to the last string in the array,
-        // replacing escaped characters with their unescaped versions
-        acc.words[acc.words.length - 1] += currentChar.replace(/\\(.)/, '$1');
+    // Split the search into individual terms, preserving quoted phrases
+    let terms = search.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
+    
+    // Handle site: filters
+    terms = terms.filter(term => {
+      if (term.startsWith('site:')) {
+        hostname_filters.push(term.substring(5).replace(/"/g, ''));
+        return false;
       }
-      return acc;
-    }, { words: [''], isInsideQuotes: 0 }).words;
-    // if any of the terms start with site: take those as host filters for the search
-    // and remove them from the terms array
-    const siteFilterTerms = terms.filter(t => t.startsWith('site:'));
-    for (const siteFilterTerm of siteFilterTerms) {
-      hostname_filters.push(siteFilterTerm.substring(5));
-      terms = terms.filter(t => t !== siteFilterTerm);
-    }
+      return true;
+    });
+
+    // Remove quotes from remaining terms
+    terms = terms.map(term => term.replace(/"/g, ''));
 
     const filteredVisits = [];
 
     for (const visitsArray of visits) {
       filteredVisits.push(
         visitsArray.filter((visit) => {
-          // check if the title or url contains all the search terms
-            for (const search_item of terms) {
-              const needle = search_item.toUpperCase();
-              const success = visit.url.toUpperCase().includes(needle) ||
-                (visit.title != null && visit.title.toUpperCase().includes(needle));
-              if (!success) {
-                return false;
-              }
-            }
-            // success if no hostname filters set
-            if (hostname_filters.length === 0) {
-              return true;
-            }
-            // otherwise require a suffix match of the host name
-            const url = new URL(visit.url);
-            for (const hostname of hostname_filters) {
-              if (url.hostname.toUpperCase().endsWith(hostname.toUpperCase()))
-                return true;
-            }
+          // First check if any search term matches (OR condition)
+          const matchesAnyTerm = terms.length === 0 || terms.some(term => {
+            const needle = term.toUpperCase();
+            return visit.url.toUpperCase().includes(needle) ||
+              (visit.title != null && visit.title.toUpperCase().includes(needle));
+          });
+
+          if (!matchesAnyTerm) {
             return false;
-          },
-        ));
+          }
+
+          // Then check hostname filters if any
+          if (hostname_filters.length === 0) {
+            return true;
+          }
+
+          const url = new URL(visit.url);
+          return hostname_filters.some(hostname => 
+            url.hostname.toUpperCase().endsWith(hostname.toUpperCase())
+          );
+        })
+      );
     }
 
     return filteredVisits;
