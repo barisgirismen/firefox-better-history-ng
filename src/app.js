@@ -33,10 +33,15 @@ class App extends React.Component {
       currentView,
       date: Moment(),
       loading: true,
-      search: null,
+      search: '',
       visits: [],
       repeatedVisits,
+      searchTerms: [], // Array of {term, color} objects
     };
+  }
+
+  onInputChange(event) {
+    this.setState({ search: event.target.value });
   }
 
   toggleRepeatedVisits() {
@@ -67,45 +72,43 @@ class App extends React.Component {
   }
 
   getFilteredVisits() {
-    const { search, visits } = this.state;
+    const { searchTerms, visits } = this.state;
 
-    if (!search || search.trim() === '') {
+    if (!searchTerms.length) {
       return visits;
     }
 
     let hostname_filters = [];
-    // Split the search into individual terms, preserving quoted phrases
-    let terms = search.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
-    
-    // Handle site: filters
-    terms = terms.filter(term => {
+    // Extract site: filters from search terms
+    const terms = searchTerms.filter(({ term }) => {
       if (term.startsWith('site:')) {
-        hostname_filters.push(term.substring(5).replace(/"/g, ''));
+        hostname_filters.push(term.substring(5));
         return false;
       }
       return true;
     });
-
-    // Remove quotes from remaining terms
-    terms = terms.map(term => term.replace(/"/g, ''));
 
     const filteredVisits = [];
 
     for (const visitsArray of visits) {
       filteredVisits.push(
         visitsArray.filter((visit) => {
-          // First check if any search term matches (OR condition)
-          const matchesAnyTerm = terms.length === 0 || terms.some(term => {
+          // Check if any search term matches
+          const matchingTerms = terms.filter(({ term, color }) => {
             const needle = term.toUpperCase();
-            return visit.url.toUpperCase().includes(needle) ||
-              (visit.title != null && visit.title.toUpperCase().includes(needle));
+            return (visit.url.toUpperCase().includes(needle) ||
+              (visit.title != null && visit.title.toUpperCase().includes(needle))) ? 
+              { term, color } : false;
           });
 
-          if (!matchesAnyTerm) {
+          if (!matchingTerms.length && terms.length > 0) {
             return false;
           }
 
-          // Then check hostname filters if any
+          // Add matching terms and their colors to the visit object
+          visit.matchingTerms = matchingTerms;
+
+          // Check hostname filters
           if (hostname_filters.length === 0) {
             return true;
           }
@@ -121,27 +124,39 @@ class App extends React.Component {
     return filteredVisits;
   }
 
-  onInputChange(event) {
-    const search = event.target.value;
-    this.setState({ search });
+  addSearchTerm(term, color) {
+    const { searchTerms } = this.state;
+    if (!searchTerms.find(t => t.term === term)) {
+      this.setState({
+        searchTerms: [...searchTerms, { term, color }],
+        search: '' // Clear input after adding term
+      });
+    }
+  }
+
+  removeSearchTerm(termToRemove) {
+    const { searchTerms } = this.state;
+    this.setState({
+      searchTerms: searchTerms.filter(({ term }) => term !== termToRemove)
+    });
   }
 
   render() {
-    const { currentView, date, loading, search, repeatedVisits } = this.state;
+    const { currentView, date, loading, search, repeatedVisits, searchTerms } = this.state;
 
     let filteredVisits = [];
     if (loading) {
       if (currentView === VIEWS.DAY) {
         HistoryApi.getDayVisits(date, repeatedVisits).then((newVisits) => {
-          this.setState({ loading: false, visits: newVisits, filteredVisits: newVisits });
+          this.setState({ loading: false, visits: newVisits });
         });
       } else if (currentView === VIEWS.WEEK) {
         HistoryApi.getWeekVisits(date, repeatedVisits).then((newVisits) => {
-          this.setState({ loading: false, visits: newVisits, filteredVisits: newVisits });
+          this.setState({ loading: false, visits: newVisits });
         });
       } else if (currentView === VIEWS.MONTH) {
         HistoryApi.getMonthVisits(date, repeatedVisits).then((newVisits) => {
-          this.setState({ loading: false, visits: newVisits, filteredVisits: newVisits });
+          this.setState({ loading: false, visits: newVisits });
         });
       }
     } else {
@@ -155,25 +170,76 @@ class App extends React.Component {
         ? HistoryApi.formatWeekHeader(date)
         : HistoryApi.formatMonthHeader(date);
 
-    let clearButtonClasses = 'search-button search-button--cancel';
-    if (!search) {
-      clearButtonClasses += ' hidden';
-    }
-
     return (
       <div className="container">
         <div className="toolbar">
           <h1>{selectedDate}</h1>
 
-          <div className="search-wrapper">
+          <div className="search-wrapper" style={{ 
+            position: 'relative',
+            padding: '4px',
+            background: '#fff',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: '4px',
+            minHeight: '36px'
+          }}>
+            {searchTerms.map(({ term, color }) => (
+              <span 
+                key={term} 
+                style={{ 
+                  backgroundColor: color + '33',
+                  border: `1px solid ${color}`,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  fontSize: '14px',
+                  maxHeight: '24px'
+                }}
+              >
+                {term}
+                <button 
+                  onClick={() => this.removeSearchTerm(term)}
+                  style={{ 
+                    marginLeft: '4px',
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    padding: '0 4px',
+                    color: '#666',
+                    fontSize: '14px'
+                  }}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
             <input
               className="default-input search-input"
               type="text"
               value={search}
               onChange={this.onInputChange.bind(this)}
-              placeholder="Search a website"
+              placeholder={searchTerms.length === 0 ? "Search a website" : ""}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && search && search.trim()) {
+                  const color = `#${Math.floor(Math.random()*16777215).toString(16)}`;
+                  this.addSearchTerm(search.trim(), color);
+                }
+              }}
+              style={{
+                border: 'none',
+                outline: 'none',
+                padding: '4px',
+                flex: '1',
+                minWidth: '100px',
+                fontSize: '14px',
+                backgroundColor: 'transparent'
+              }}
             />
-            <button className={clearButtonClasses} onClick={() => this.setState({ search: '' })} title="Clear" />
           </div>
 
           <button className="toolbar-item-right ghost-button align-right" onClick={() => this.previous()}>
