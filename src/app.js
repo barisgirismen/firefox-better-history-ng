@@ -275,7 +275,13 @@ class App extends React.Component {
                 flex: '1',
                 minWidth: '100px',
                 fontSize: '14px',
-                backgroundColor: 'transparent'
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                ':focus': {
+                  border: 'none',
+                  outline: 'none',
+                  boxShadow: 'none'
+                }
               }}
             />
           </div>
