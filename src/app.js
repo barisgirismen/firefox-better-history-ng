@@ -36,7 +36,9 @@ class App extends React.Component {
       search: '',
       visits: [],
       repeatedVisits,
-      searchTerms: [], // Array of {term, color} objects
+      searchTerms: [], // Array of {term, color, exclude} objects
+      editingTerm: null, // For color editing
+      tempColor: null, // For color preview
     };
   }
 
@@ -71,6 +73,33 @@ class App extends React.Component {
     this.setState({ date: targetDate, loading: true });
   }
 
+  addSearchTerm(term, color) {
+    const { searchTerms } = this.state;
+    const isExclude = term.startsWith('-');
+    const actualTerm = isExclude ? term.substring(1) : term;
+    
+    if (!searchTerms.find(t => t.term === actualTerm)) {
+      this.setState({
+        searchTerms: [...searchTerms, { 
+          term: actualTerm, 
+          color, 
+          exclude: isExclude 
+        }],
+        search: ''
+      });
+    }
+  }
+
+  updateTermColor(term, newColor) {
+    const { searchTerms } = this.state;
+    this.setState({
+      searchTerms: searchTerms.map(t => 
+        t.term === term ? { ...t, color: newColor } : t
+      ),
+      editingTerm: null
+    });
+  }
+
   getFilteredVisits() {
     const { searchTerms, visits } = this.state;
 
@@ -79,13 +108,18 @@ class App extends React.Component {
     }
 
     let hostname_filters = [];
-    // Extract site: filters from search terms
-    const terms = searchTerms.filter(({ term }) => {
-      if (term.startsWith('site:')) {
-        hostname_filters.push(term.substring(5));
-        return false;
+    // Split terms into include and exclude
+    const includeTerms = [];
+    const excludeTerms = [];
+    
+    searchTerms.forEach(term => {
+      if (term.term.startsWith('site:')) {
+        hostname_filters.push(term.term.substring(5));
+      } else if (term.exclude) {
+        excludeTerms.push(term);
+      } else {
+        includeTerms.push(term);
       }
-      return true;
     });
 
     const filteredVisits = [];
@@ -93,19 +127,29 @@ class App extends React.Component {
     for (const visitsArray of visits) {
       filteredVisits.push(
         visitsArray.filter((visit) => {
-          // Check if any search term matches
-          const matchingTerms = terms.filter(({ term, color }) => {
+          // Check excluded terms first
+          const hasExcludedTerm = excludeTerms.some(({ term }) => {
+            const needle = term.toUpperCase();
+            return visit.url.toUpperCase().includes(needle) ||
+              (visit.title != null && visit.title.toUpperCase().includes(needle));
+          });
+
+          if (hasExcludedTerm) {
+            return false;
+          }
+
+          // Check included terms
+          const matchingTerms = includeTerms.filter(({ term, color }) => {
             const needle = term.toUpperCase();
             return (visit.url.toUpperCase().includes(needle) ||
               (visit.title != null && visit.title.toUpperCase().includes(needle))) ? 
               { term, color } : false;
           });
 
-          if (!matchingTerms.length && terms.length > 0) {
+          if (!matchingTerms.length && includeTerms.length > 0) {
             return false;
           }
 
-          // Add matching terms and their colors to the visit object
           visit.matchingTerms = matchingTerms;
 
           // Check hostname filters
@@ -122,16 +166,6 @@ class App extends React.Component {
     }
 
     return filteredVisits;
-  }
-
-  addSearchTerm(term, color) {
-    const { searchTerms } = this.state;
-    if (!searchTerms.find(t => t.term === term)) {
-      this.setState({
-        searchTerms: [...searchTerms, { term, color }],
-        search: '' // Clear input after adding term
-      });
-    }
   }
 
   removeSearchTerm(termToRemove) {
@@ -186,7 +220,7 @@ class App extends React.Component {
             gap: '4px',
             minHeight: '36px'
           }}>
-            {searchTerms.map(({ term, color }) => (
+            {searchTerms.map(({ term, color, exclude }) => (
               <span 
                 key={term} 
                 style={{ 
@@ -197,12 +231,17 @@ class App extends React.Component {
                   display: 'inline-flex',
                   alignItems: 'center',
                   fontSize: '14px',
-                  maxHeight: '24px'
+                  maxHeight: '24px',
+                  cursor: 'pointer'
                 }}
+                onClick={() => this.setState({ editingTerm: term })}
               >
-                {term}
+                {exclude ? '-' : ''}{term}
                 <button 
-                  onClick={() => this.removeSearchTerm(term)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    this.removeSearchTerm(term);
+                  }}
                   style={{ 
                     marginLeft: '4px',
                     border: 'none',
@@ -222,7 +261,7 @@ class App extends React.Component {
               type="text"
               value={search}
               onChange={this.onInputChange.bind(this)}
-              placeholder={searchTerms.length === 0 ? "Search a website" : ""}
+              placeholder={searchTerms.length === 0 ? "Search or use - to exclude terms" : ""}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && search && search.trim()) {
                   const color = `#${Math.floor(Math.random()*16777215).toString(16)}`;
@@ -240,6 +279,194 @@ class App extends React.Component {
               }}
             />
           </div>
+
+          {/* Improved color picker dialog */}
+          {this.state.editingTerm && (
+            <div style={{
+              position: 'fixed',  // Changed to fixed for better positioning
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              backgroundColor: 'white',
+              padding: '24px',
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              zIndex: 1000,
+              width: '300px',
+              border: '1px solid #eee'
+            }}>
+              {/* Overlay for clicking outside to close */}
+              <div 
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0,0,0,0.5)',
+                  zIndex: -1
+                }}
+                onClick={() => this.setState({ editingTerm: null })}
+              />
+              
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px'
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '8px'
+                }}>
+                  <h3 style={{
+                    margin: 0,
+                    fontSize: '18px',
+                    fontWeight: '500'
+                  }}>Edit Color</h3>
+                  <button 
+                    onClick={() => this.setState({ editingTerm: null })}
+                    style={{
+                      border: 'none',
+                      background: 'none',
+                      fontSize: '20px',
+                      cursor: 'pointer',
+                      padding: '4px',
+                      color: '#666',
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '16px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '8px',
+                  backgroundColor: '#f5f5f5',
+                  borderRadius: '8px'
+                }}>
+                  <span style={{
+                    backgroundColor: searchTerms.find(t => t.term === this.state.editingTerm)?.color + '33',
+                    border: `1px solid ${searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
+                    padding: '4px 12px',
+                    borderRadius: '12px',
+                    fontSize: '14px'
+                  }}>
+                    {this.state.editingTerm}
+                  </span>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <label 
+                    htmlFor="colorPicker"
+                    style={{
+                      fontSize: '14px',
+                      color: '#666'
+                    }}
+                  >
+                    Choose a new color:
+                  </label>
+                  <input
+                    id="colorPicker"
+                    type="color"
+                    value={searchTerms.find(t => t.term === this.state.editingTerm)?.color || '#000000'}
+                    onChange={(e) => {
+                      // Store the color temporarily without applying
+                      this.setState(prevState => ({
+                        tempColor: e.target.value
+                      }));
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '40px',
+                      padding: '4px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px'
+                    }}
+                  />
+                </div>
+
+                {/* Preview section */}
+                <div style={{
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  backgroundColor: '#f9f9f9'
+                }}>
+                  <div style={{
+                    fontSize: '14px',
+                    color: '#666',
+                    marginBottom: '8px'
+                  }}>
+                    Preview:
+                  </div>
+                  <div style={{
+                    backgroundColor: (this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color) + '33',
+                    border: `1px solid ${this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}>
+                    Sample text with new color
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  marginTop: '8px'
+                }}>
+                  <button
+                    onClick={() => this.setState({ editingTerm: null })}
+                    style={{
+                      flex: 1,
+                      padding: '8px 16px',
+                      border: '1px solid #ddd',
+                      borderRadius: '6px',
+                      backgroundColor: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (this.state.tempColor) {
+                        this.updateTermColor(this.state.editingTerm, this.state.tempColor);
+                      }
+                      this.setState({ tempColor: null });
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      backgroundColor: '#007AFF',
+                      color: 'white',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <button className="toolbar-item-right ghost-button align-right" onClick={() => this.previous()}>
             <Icon default="back" />
