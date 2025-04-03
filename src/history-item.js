@@ -12,7 +12,9 @@ const highlightText = (text, matchingTerms) => {
 
 // Calculate background color based on matching terms
 const getBackgroundColor = (matchingTerms) => {
-  if (!matchingTerms || !matchingTerms.length) return 'transparent';
+  if (!matchingTerms || !matchingTerms.length) {
+    return 'rgba(255, 255, 255, 0.03)';  // Default background color when no terms match
+  }
   
   // If there's only one term, use its color with reduced opacity
   if (matchingTerms.length === 1) {
@@ -48,13 +50,26 @@ export const History = ({ visits, day = false }) => (
           style={{ 
             display: 'flex', 
             flexDirection: 'column',
-            padding: '4px 8px',
-            borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+            padding: '8px 12px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
             minHeight: '40px',
             width: '100%',
             boxSizing: 'border-box',
-            background: getBackgroundColor(visit.matchingTerms),
-            transition: 'background-color 0.2s ease'
+            background: getBackgroundColor(visit.matchingTerms),  // Remove the || condition since getBackgroundColor now always returns a value
+            transition: 'all 0.2s ease',
+            borderRadius: '8px',
+            marginBottom: '4px',
+            cursor: 'default'
+          }}
+          onMouseEnter={(e) => {
+            if (!visit.matchingTerms?.length) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!visit.matchingTerms?.length) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+            }
           }}
         >
           <div style={{ 
@@ -82,7 +97,8 @@ export const History = ({ visits, day = false }) => (
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              textAlign: 'left'
+              textAlign: 'left',
+              color: '#ffffff'  // Added white text color
             }}>
               <abbr title={getTitle(visit)}>
                 {getTitle(visit)}
@@ -92,7 +108,20 @@ export const History = ({ visits, day = false }) => (
               flexShrink: 0,
               marginLeft: 'auto'
             }}>
-              <a href={visit.url} title={visit.url} target="_blank" rel="noopener noreferrer">
+              <a 
+                href={visit.url} 
+                title={visit.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{
+                  color: '#2563eb',  // Blue link color
+                  textDecoration: 'none',
+                  opacity: 0.9,
+                  transition: 'opacity 0.2s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.opacity = '1'}
+                onMouseLeave={(e) => e.target.style.opacity = '0.9'}
+              >
                 {day ? 'Link' : ''}
               </a>
             </div>
@@ -101,7 +130,7 @@ export const History = ({ visits, day = false }) => (
           <div style={{ 
             display: 'flex', 
             fontSize: '0.85em',
-            color: '#666',
+            color: 'rgba(255, 255, 255, 0.5)',  // Updated secondary text color
             minHeight: '16px',
             width: '100%',
             alignItems: 'center',
@@ -117,12 +146,13 @@ export const History = ({ visits, day = false }) => (
               })}
             </span>
             <span style={{ 
-              marginLeft: '4px',
+              marginLeft: '8px',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
               flex: '1 1 auto',
-              textAlign: 'left'
+              textAlign: 'left',
+              opacity: 0.7
             }}>
               {highlightText(visit.url, visit.matchingTerms)}
             </span>
