@@ -178,7 +178,6 @@ class App extends React.Component {
           <div className="search-wrapper" style={{ 
             position: 'relative',
             padding: '4px',
-            background: '#fff',
             borderRadius: '4px',
             border: '1px solid #ccc',
             display: 'flex',
