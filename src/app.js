@@ -280,22 +280,10 @@ class App extends React.Component {
             />
           </div>
 
-          {/* Improved color picker dialog */}
+          {/* Enhanced color picker dialog */}
           {this.state.editingTerm && (
-            <div style={{
-              position: 'fixed',  // Changed to fixed for better positioning
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              backgroundColor: 'white',
-              padding: '24px',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-              zIndex: 1000,
-              width: '300px',
-              border: '1px solid #eee'
-            }}>
-              {/* Overlay for clicking outside to close */}
+            <>
+              {/* Improved overlay with blur effect */}
               <div 
                 style={{
                   position: 'fixed',
@@ -303,169 +291,211 @@ class App extends React.Component {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(0,0,0,0.5)',
-                  zIndex: -1
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  backdropFilter: 'blur(4px)',
+                  zIndex: 999
                 }}
-                onClick={() => this.setState({ editingTerm: null })}
+                onClick={() => this.setState({ editingTerm: null, tempColor: null })}
               />
               
               <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '16px'
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: '#ffffff',
+                padding: '24px',
+                borderRadius: '16px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                zIndex: 1000,
+                width: '320px',
+                border: '1px solid rgba(0,0,0,0.08)',
+                animation: 'fadeIn 0.2s ease-out'
               }}>
                 <div style={{
                   display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '8px'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '18px',
-                    fontWeight: '500'
-                  }}>Edit Color</h3>
-                  <button 
-                    onClick={() => this.setState({ editingTerm: null })}
-                    style={{
-                      border: 'none',
-                      background: 'none',
-                      fontSize: '20px',
-                      cursor: 'pointer',
-                      padding: '4px',
-                      color: '#666',
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '16px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    ×
-                  </button>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '8px',
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '8px'
-                }}>
-                  <span style={{
-                    backgroundColor: searchTerms.find(t => t.term === this.state.editingTerm)?.color + '33',
-                    border: `1px solid ${searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
-                    padding: '4px 12px',
-                    borderRadius: '12px',
-                    fontSize: '14px'
-                  }}>
-                    {this.state.editingTerm}
-                  </span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
                   flexDirection: 'column',
-                  gap: '8px'
+                  gap: '20px'
                 }}>
-                  <label 
-                    htmlFor="colorPicker"
-                    style={{
+                  {/* Header */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                    <h3 style={{
+                      margin: 0,
+                      fontSize: '20px',
+                      fontWeight: '600',
+                      color: '#1a1a1a'
+                    }}>Edit Color</h3>
+                    <button 
+                      onClick={() => this.setState({ editingTerm: null, tempColor: null })}
+                      style={{
+                        border: 'none',
+                        background: 'rgba(0,0,0,0.05)',
+                        fontSize: '18px',
+                        cursor: 'pointer',
+                        padding: '8px',
+                        color: '#666',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.1)'}
+                      onMouseLeave={(e) => e.target.style.background = 'rgba(0,0,0,0.05)'}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  {/* Current term display */}
+                  <div style={{
+                    background: 'linear-gradient(to right bottom, #f7f7f7, #ffffff)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0,0,0,0.06)'
+                  }}>
+                    <div style={{
+                      fontSize: '13px',
+                      color: '#666',
+                      marginBottom: '8px',
+                      fontWeight: '500'
+                    }}>
+                      Current term:
+                    </div>
+                    <span style={{
+                      backgroundColor: searchTerms.find(t => t.term === this.state.editingTerm)?.color + '15',
+                      border: `1px solid ${searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
+                      padding: '6px 12px',
+                      borderRadius: '8px',
                       fontSize: '14px',
-                      color: '#666'
-                    }}
-                  >
-                    Choose a new color:
-                  </label>
-                  <input
-                    id="colorPicker"
-                    type="color"
-                    value={searchTerms.find(t => t.term === this.state.editingTerm)?.color || '#000000'}
-                    onChange={(e) => {
-                      // Store the color temporarily without applying
-                      this.setState(prevState => ({
-                        tempColor: e.target.value
-                      }));
-                    }}
-                    style={{
-                      width: '100%',
-                      height: '40px',
-                      padding: '4px',
-                      border: '1px solid #ddd',
-                      borderRadius: '4px'
-                    }}
-                  />
-                </div>
-
-                {/* Preview section */}
-                <div style={{
-                  padding: '12px',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  backgroundColor: '#f9f9f9'
-                }}>
-                  <div style={{
-                    fontSize: '14px',
-                    color: '#666',
-                    marginBottom: '8px'
-                  }}>
-                    Preview:
+                      color: '#1a1a1a',
+                      fontWeight: '500',
+                      display: 'inline-block'
+                    }}>
+                      {this.state.editingTerm}
+                    </span>
                   </div>
-                  <div style={{
-                    backgroundColor: (this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color) + '33',
-                    border: `1px solid ${this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
-                    padding: '8px 16px',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}>
-                    Sample text with new color
-                  </div>
-                </div>
 
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                  marginTop: '8px'
-                }}>
-                  <button
-                    onClick={() => this.setState({ editingTerm: null })}
-                    style={{
-                      flex: 1,
-                      padding: '8px 16px',
-                      border: '1px solid #ddd',
-                      borderRadius: '6px',
-                      backgroundColor: 'white',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (this.state.tempColor) {
-                        this.updateTermColor(this.state.editingTerm, this.state.tempColor);
-                      }
-                      this.setState({ tempColor: null });
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '8px 16px',
-                      border: 'none',
-                      borderRadius: '6px',
-                      backgroundColor: '#007AFF',
-                      color: 'white',
-                      cursor: 'pointer',
-                      fontSize: '14px'
-                    }}
-                  >
-                    Save
-                  </button>
+                  {/* Color picker section */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <label 
+                      htmlFor="colorPicker"
+                      style={{
+                        fontSize: '13px',
+                        color: '#666',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Select a new color:
+                    </label>
+                    <input
+                      id="colorPicker"
+                      type="color"
+                      value={this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color || '#000000'}
+                      onChange={(e) => {
+                        this.setState({ tempColor: e.target.value });
+                      }}
+                      style={{
+                        width: '100%',
+                        height: '48px',
+                        padding: '4px',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        borderRadius: '8px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                  </div>
+
+                  {/* Preview section */}
+                  <div style={{
+                    background: 'linear-gradient(to right bottom, #f7f7f7, #ffffff)',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(0,0,0,0.06)'
+                  }}>
+                    <div style={{
+                      fontSize: '13px',
+                      color: '#666',
+                      marginBottom: '12px',
+                      fontWeight: '500'
+                    }}>
+                      Preview
+                    </div>
+                    <div style={{
+                      backgroundColor: (this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color) + '15',
+                      border: `1px solid ${this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
+                      padding: '12px 16px',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      color: '#1a1a1a'
+                    }}>
+                      Sample text with selected color
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '12px',
+                    marginTop: '4px'
+                  }}>
+                    <button
+                      onClick={() => this.setState({ editingTerm: null, tempColor: null })}
+                      style={{
+                        flex: 1,
+                        padding: '10px 16px',
+                        border: '1px solid rgba(0,0,0,0.1)',
+                        borderRadius: '8px',
+                        backgroundColor: '#ffffff',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        color: '#666',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ffffff'}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (this.state.tempColor) {
+                          this.updateTermColor(this.state.editingTerm, this.state.tempColor);
+                        }
+                        this.setState({ tempColor: null });
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '10px 16px',
+                        border: 'none',
+                        borderRadius: '8px',
+                        backgroundColor: '#2563eb',
+                        color: 'white',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
+                    >
+                      Save Changes
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           <button className="toolbar-item-right ghost-button align-right" onClick={() => this.previous()}>
