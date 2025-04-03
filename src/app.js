@@ -280,7 +280,7 @@ class App extends React.Component {
             />
           </div>
 
-          {/* Enhanced color picker dialog */}
+          {/* Enhanced color picker dialog with dark theme */}
           {this.state.editingTerm && (
             <>
               {/* Improved overlay with blur effect */}
@@ -291,7 +291,7 @@ class App extends React.Component {
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  backgroundColor: 'rgba(0,0,0,0.7)',
                   backdropFilter: 'blur(4px)',
                   zIndex: 999
                 }}
@@ -303,13 +303,13 @@ class App extends React.Component {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                backgroundColor: '#ffffff',
+                backgroundColor: '#1a1a1a',
                 padding: '24px',
                 borderRadius: '16px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
                 zIndex: 1000,
                 width: '320px',
-                border: '1px solid rgba(0,0,0,0.08)',
+                border: '1px solid rgba(255,255,255,0.1)',
                 animation: 'fadeIn 0.2s ease-out'
               }}>
                 <div style={{
@@ -327,17 +327,17 @@ class App extends React.Component {
                       margin: 0,
                       fontSize: '20px',
                       fontWeight: '600',
-                      color: '#1a1a1a'
+                      color: '#ffffff'
                     }}>Edit Color</h3>
                     <button 
                       onClick={() => this.setState({ editingTerm: null, tempColor: null })}
                       style={{
                         border: 'none',
-                        background: 'rgba(0,0,0,0.05)',
+                        background: 'rgba(255,255,255,0.1)',
                         fontSize: '18px',
                         cursor: 'pointer',
                         padding: '8px',
-                        color: '#666',
+                        color: '#ffffff',
                         width: '32px',
                         height: '32px',
                         borderRadius: '50%',
@@ -346,8 +346,8 @@ class App extends React.Component {
                         justifyContent: 'center',
                         transition: 'all 0.2s ease'
                       }}
-                      onMouseEnter={(e) => e.target.style.background = 'rgba(0,0,0,0.1)'}
-                      onMouseLeave={(e) => e.target.style.background = 'rgba(0,0,0,0.05)'}
+                      onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.15)'}
+                      onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
                     >
                       ×
                     </button>
@@ -355,26 +355,26 @@ class App extends React.Component {
 
                   {/* Current term display */}
                   <div style={{
-                    background: 'linear-gradient(to right bottom, #f7f7f7, #ffffff)',
+                    background: 'linear-gradient(to right bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
                     padding: '16px',
                     borderRadius: '12px',
-                    border: '1px solid rgba(0,0,0,0.06)'
+                    border: '1px solid rgba(255,255,255,0.1)'
                   }}>
                     <div style={{
                       fontSize: '13px',
-                      color: '#666',
+                      color: '#999',
                       marginBottom: '8px',
                       fontWeight: '500'
                     }}>
                       Current term:
                     </div>
                     <span style={{
-                      backgroundColor: searchTerms.find(t => t.term === this.state.editingTerm)?.color + '15',
+                      backgroundColor: searchTerms.find(t => t.term === this.state.editingTerm)?.color + '33',
                       border: `1px solid ${searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
                       padding: '6px 12px',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      color: '#1a1a1a',
+                      color: '#ffffff',
                       fontWeight: '500',
                       display: 'inline-block'
                     }}>
@@ -392,7 +392,7 @@ class App extends React.Component {
                       htmlFor="colorPicker"
                       style={{
                         fontSize: '13px',
-                        color: '#666',
+                        color: '#999',
                         fontWeight: '500'
                       }}
                     >
@@ -409,35 +409,36 @@ class App extends React.Component {
                         width: '100%',
                         height: '48px',
                         padding: '4px',
-                        border: '1px solid rgba(0,0,0,0.1)',
+                        border: '1px solid rgba(255,255,255,0.1)',
                         borderRadius: '8px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        backgroundColor: '#2d2d2d'
                       }}
                     />
                   </div>
 
                   {/* Preview section */}
                   <div style={{
-                    background: 'linear-gradient(to right bottom, #f7f7f7, #ffffff)',
+                    background: 'linear-gradient(to right bottom, rgba(255,255,255,0.05), rgba(255,255,255,0.02))',
                     padding: '16px',
                     borderRadius: '12px',
-                    border: '1px solid rgba(0,0,0,0.06)'
+                    border: '1px solid rgba(255,255,255,0.1)'
                   }}>
                     <div style={{
                       fontSize: '13px',
-                      color: '#666',
+                      color: '#999',
                       marginBottom: '12px',
                       fontWeight: '500'
                     }}>
                       Preview
                     </div>
                     <div style={{
-                      backgroundColor: (this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color) + '15',
+                      backgroundColor: (this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color) + '33',
                       border: `1px solid ${this.state.tempColor || searchTerms.find(t => t.term === this.state.editingTerm)?.color}`,
                       padding: '12px 16px',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      color: '#1a1a1a'
+                      color: '#ffffff'
                     }}>
                       Sample text with selected color
                     </div>
@@ -454,17 +455,17 @@ class App extends React.Component {
                       style={{
                         flex: 1,
                         padding: '10px 16px',
-                        border: '1px solid rgba(0,0,0,0.1)',
+                        border: '1px solid rgba(255,255,255,0.1)',
                         borderRadius: '8px',
-                        backgroundColor: '#ffffff',
+                        backgroundColor: 'rgba(255,255,255,0.05)',
                         cursor: 'pointer',
                         fontSize: '14px',
-                        color: '#666',
+                        color: '#ffffff',
                         fontWeight: '500',
                         transition: 'all 0.2s ease'
                       }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ffffff'}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.1)'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.05)'}
                     >
                       Cancel
                     </button>
